@@ -16,33 +16,10 @@ button { font-size: 1.2em; padding: 10px 20px; margin: 10px; }
 <button id="parar" style="display:none;">Parar som</button>
 <div id="status"></div>
 
+<audio id="alarme" src="alarme.mp3" loop></audio>
+
 <script>
-let audioCtx;
-let oscillator;
-
-function tocarAlerta() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  oscillator = audioCtx.createOscillator();
-  oscillator.type = 'sine';
-  oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
-  oscillator.connect(audioCtx.destination);
-  oscillator.start();
-}
-
-function pararSom() {
-  if (oscillator) {
-    oscillator.stop();
-    oscillator.disconnect();
-    oscillator = null;
-  }
-}
-
-document.getElementById('parar').onclick = () => {
-  pararSom();
-  document.getElementById('parar').style.display = 'none';
-};
+const alarme = document.getElementById('alarme');
 
 document.getElementById('permitir').onclick = () => {
   if ('getBattery' in navigator) {
@@ -50,9 +27,11 @@ document.getElementById('permitir').onclick = () => {
       function atualizar() {
         let nivel = Math.round(battery.level * 100);
         document.getElementById('status').textContent = `Bateria: ${nivel}%`;
-        if (nivel === 100 && !oscillator) {
+        if (nivel === 100 && alarme.paused) {
           alert('Bateria 100%!');
-          tocarAlerta();
+          alarme.play().catch(() => {
+            document.getElementById('status').textContent = 'Toque bloqueado. Toque em qualquer lugar para liberar o áudio.';
+          });
           document.getElementById('parar').style.display = 'inline-block';
         }
       }
@@ -64,6 +43,12 @@ document.getElementById('permitir').onclick = () => {
   } else {
     document.getElementById('status').textContent = 'Seu navegador não permite acesso à bateria.';
   }
+};
+
+document.getElementById('parar').onclick = () => {
+  alarme.pause();
+  alarme.currentTime = 0;
+  document.getElementById('parar').style.display = 'none';
 };
 </script>
 </body>
