@@ -5,7 +5,7 @@
 <title>Monitor de Bateria</title>
 <style>
 body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-button { font-size: 1.2em; padding: 10px 20px; }
+button { font-size: 1.2em; padding: 10px 20px; margin: 10px; }
 #status { font-size: 1.5em; margin-top: 20px; }
 </style>
 </head>
@@ -13,16 +13,48 @@ button { font-size: 1.2em; padding: 10px 20px; }
 <h1>Monitor de Bateria</h1>
 <p>Toque em “Permitir acesso” para verificar a bateria.</p>
 <button id="permitir">Permitir acesso</button>
+<button id="parar" style="display:none;">Parar som</button>
 <div id="status"></div>
 
 <script>
+let audioCtx;
+let oscillator;
+
+function tocarAlerta() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  oscillator = audioCtx.createOscillator();
+  oscillator.type = 'sine';
+  oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+  oscillator.connect(audioCtx.destination);
+  oscillator.start();
+}
+
+function pararSom() {
+  if (oscillator) {
+    oscillator.stop();
+    oscillator.disconnect();
+    oscillator = null;
+  }
+}
+
+document.getElementById('parar').onclick = () => {
+  pararSom();
+  document.getElementById('parar').style.display = 'none';
+};
+
 document.getElementById('permitir').onclick = () => {
   if ('getBattery' in navigator) {
     navigator.getBattery().then(battery => {
       function atualizar() {
         let nivel = Math.round(battery.level * 100);
         document.getElementById('status').textContent = `Bateria: ${nivel}%`;
-        if (nivel === 100) alert('Bateria 100%!');
+        if (nivel === 100 && !oscillator) {
+          alert('Bateria 100%!');
+          tocarAlerta();
+          document.getElementById('parar').style.display = 'inline-block';
+        }
       }
       atualizar();
       battery.addEventListener('levelchange', atualizar);
