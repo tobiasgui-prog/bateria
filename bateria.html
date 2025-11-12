@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Monitor de Bateria</title>
+<style>
+body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+button { font-size: 1.2em; padding: 10px 20px; }
+#status { font-size: 1.5em; margin-top: 20px; }
+</style>
+</head>
+<body>
+<h1>Monitor de Bateria</h1>
+<p>Toque em “Permitir acesso” para verificar a bateria.</p>
+<button id="permitir">Permitir acesso</button>
+<div id="status"></div>
+
+<script>
+document.getElementById('permitir').onclick = () => {
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+      function atualizar() {
+        let nivel = Math.round(battery.level * 100);
+        document.getElementById('status').textContent = `Bateria: ${nivel}%`;
+        if (nivel === 100) alert('Bateria 100%!');
+      }
+      atualizar();
+      battery.addEventListener('levelchange', atualizar);
+    }).catch(err => {
+      document.getElementById('status').textContent = 'Falha ao obter status da bateria.';
+    });
+  } else {
+    document.getElementById('status').textContent = 'Seu navegador não permite acesso à bateria.';
+  }
+};
+</script>
+</body>
+</html>
